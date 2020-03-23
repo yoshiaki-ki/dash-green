@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 
 from app import app
 from apps import app_company, app_filter
+from callbacks import callbacks
 
 
 app.layout = html.Div([
@@ -15,9 +16,9 @@ app.layout = html.Div([
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/apps/filter':
+    if pathname == '/':
         return app_filter.layout
-    elif pathname == '/apps/company':
+    elif pathname == '/company':
         return app_company.layout
     else:
         return '404'

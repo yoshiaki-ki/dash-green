@@ -1,15 +1,8 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.graph_objects as go
 import pandas as pd
-import numpy as np
 import yaml
-
-from dash.dependencies import Input, Output, State
-from dash.exceptions import PreventUpdate
-
-from app import app
 
 with open('config.yaml') as file:
     config = yaml.safe_load(file.read())
@@ -20,27 +13,24 @@ styles = {
     'pre': {
         'border': 'thin lightgrey solid',
         'overflowX': 'scroll'
+    },
+    'card': {
+        'padding': '0.5em 1em',
+        'margin': '2em 0',
+        'background': 'white',
+        'color': '#5d627b',
+        'border-top': 'solid 5px #5d627b',
+        'box-shadow': '0 3px 5px rgba(0, 0, 0, 0.22)'
     }
 }
 
-
-# dataframeをテーブルに
-def generate_table(dataframe, max_rows=10):
-    columns = ["company", "job_tag", "job_title", "job_url", "max_salary", "min_salary"]
-    return html.Table(
-        # Header
-        [html.Tr([html.Th(col) for col in columns])] +
-
-        # Body
-        [html.Tr([
-            html.Td(dataframe.iloc[i][col]) for col in columns
-        ]) for i in range(min(len(dataframe), max_rows))]
-    )
-
-
 layout = html.Div([
-    html.Div(className='container', children=[
-        dcc.Link('職種・業種で検索', href='/apps/filter'),
+    html.Div([
+        dcc.Link('各条件で検索', href='/'),
+    ], style={'margin-bottom': '20px'}),
+
+    html.Div([
+        html.H1(children='企業別 求人'),
 
         html.Div(className='row', children=[
             html.Div([
@@ -51,31 +41,27 @@ layout = html.Div([
                     value=[],
                     multi=True
                 ),
-            ]),
+            ], style={'margin-bottom': '20px'}),
 
             html.Button(id='submit-button', n_clicks=0, children='Submit'),
         ]),
+        dcc.Loading(id="loading-2", children=[html.Div(id="loading-output-2")],
+                    type="graph"),
 
-        html.Div(id='data-table')
+        html.Div(className='row', children=[
+            html.Div([
+                dcc.Graph(
+                    id='all-mean-graph',
+                ),
+            ], style={'display': 'inline-block', 'width': '30%'}),
+            html.Div([
+                dcc.Graph(
+                    id='mean-graph',
+                ),
+            ], style={'display': 'inline-block', 'width': '70%'}),
+        ]),
+
+        html.Div(id='data-table'),
+
     ])
-])
-
-
-@app.callback(
-    Output(component_id='data-table', component_property='children'),
-    [Input('submit-button', 'n_clicks')],
-    [State('company-name', 'value'), ]
-)
-def update_output_div(n_clicks, input_value):
-    if n_clicks == 0:
-        raise PreventUpdate
-    else:
-        selected_companies = input_value
-        dfs = []
-        for company in selected_companies:
-            selected_df = df[df["company"] == company]
-            dfs.append(selected_df)
-
-        merged_dfs = pd.concat(dfs)
-
-        return generate_table(merged_dfs)
+], style={'margin': '3%'})
